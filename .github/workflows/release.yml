@@ -42,7 +42,7 @@ jobs:
         with:
           context: .
           load: true
-          tags: ${{ github.event.release.tag_name }}
+          tags: ${{github.ref_name}}
 
       - name: Build and push Docker image
         id: build-and-push
@@ -51,7 +51,7 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: dylanbarbona/devops-project-api:${{ github.event.release.tag_name }}
+          tags: dylanbarbona/devops-project-api:release:${{github.ref_name}}
           
   deploy:
     name: "Deploy"
@@ -135,6 +135,6 @@ jobs:
           options: |
             --extra-vars "DOCKER_USERNAME=${{ secrets.DOCKERHUB_USERNAME }} \
               DOCKER_PASSWORD=${{ secrets.DOCKERHUB_PASSWORD }} \
-              DOCKER_IMAGE=dylanbarbona/devops-project-api:${{ github.event.release.tag_name }} \ 
+              DOCKER_IMAGE=dylanbarbona/devops-project-api:${{github.ref_name}} \ 
               DOCKER_CONTAINER=devops-project-api"
             --verbose
