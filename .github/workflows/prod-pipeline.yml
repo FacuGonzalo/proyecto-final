@@ -2,7 +2,7 @@ name: Test, Build & Deploy
 
 on:
   push:
-    branches: ["dev", "prod"]
+    branches: ["prod"]
 
 jobs:
   test:
@@ -75,12 +75,6 @@ jobs:
           load: true
           tags: ${{ steps.extract_branch.outputs.branch }}
 
-      #- name: Test
-      #  run: |
-      #    docker run --rm ${{ steps.extract_branch.outputs.branch }}
-
-      # Build and push Docker image with Buildx (don't push on PR)
-      # https://github.com/docker/build-push-action
       - name: Build and push Docker image
         id: build-and-push
         uses: docker/build-push-action@v3
@@ -139,39 +133,3 @@ jobs:
           -var 'AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}'
           -var 'AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}'
           -var 'db_password=${{ secrets.DB_PASSWORD }}'
-
-        # On push to "main", build or change infrastructure according to Terraform configuration files
-        # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
-      - name: Terraform Apply
-        working-directory: './terraform'
-        run: terraform apply -auto-approve -input=false
-          -var 'AWS_INSTANCE_PUBLIC_KEY=${{ secrets.AWS_INSTANCE_PUBLIC_KEY }}'
-          -var 'AWS_INSTANCE_PRIVATE_KEY=${{ secrets.AWS_INSTANCE_PRIVATE_KEY }}'
-          -var 'AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}'
-          -var 'AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}'
-          -var 'db_password=${{ secrets.DB_PASSWORD }}'
-
-      - name: Get bastion host
-        working-directory: './terraform'
-        run: echo "::set-output name=BASTION_HOST::$(terraform output -raw bastion_url)"
-        id: get-bastion-host
-
-      - name: Show bastion host
-        run: echo "${{ steps.get-bastion-host.outputs.BASTION_HOST }}"
-
-      - name: Run playbook
-        uses: dawidd6/action-ansible-playbook@v2
-        with:
-          playbook: ansible.yaml
-          directory: ./ansible
-          key: ${{ secrets.AWS_INSTANCE_PRIVATE_KEY }}
-          inventory: |
-            [all]
-            ${{ steps.get-bastion-host.outputs.BASTION_HOST }}
-
-          options: |
-            --extra-vars "DOCKER_USERNAME=${{ secrets.DOCKERHUB_USERNAME }} \
-              DOCKER_PASSWORD=${{ secrets.DOCKERHUB_PASSWORD }} \
-              DOCKER_IMAGE=dylanbarbona/devops-project-api:${{ steps.extract_branch.outputs.branch }} \ 
-              DOCKER_CONTAINER=devops-project-api"
-            --verbose
