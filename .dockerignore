@@ -1,0 +1,7 @@
+# Versioning and metadata
+.git
+.env
+Dockerfile
+.dockerignore
+npm-debug.log
+dist

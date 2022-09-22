@@ -1,0 +1,49 @@
+---
+- hosts: all
+  become: true
+  remote_user: ubuntu
+  become_method: sudo
+
+  vars:
+    source_dir: .
+    destination_dir: /home/ubuntu/ansible
+
+  tasks:
+    - name: Create ansible folder
+      file:
+        path: "{{ destination_dir }}"
+        state: directory
+
+    - name: Retrieve directory structure from the source
+      find:
+        paths: "{{ source_dir }}"
+        file_type: directory
+        recurse: true
+      delegate_to: localhost
+      register: find_dirs
+
+    - name: Retrieve .yaml files paths from the source
+      find:
+        paths: "{{ source_dir }}"
+        file_type: file
+        patterns: "*.yaml"
+        excludes: 'ansible.yaml'
+        recurse: true
+      delegate_to: localhost
+      register: find_yamlfiles
+
+    - name: Ensure directory structure is recreated on the destination
+      file:
+        path: "{{ destination_dir }}/{{ item }}"
+        state: directory
+      with_items: "{{ find_dirs.files | map(attribute='path') | map('relpath', source_dir) | list }}"
+
+    - name: Ensure .yaml files are copied to the destination
+      copy:
+        src: "{{ source_dir }}/{{ item }}"
+        dest: "{{ destination_dir }}/{{ item }}"
+        owner: ubuntu
+      with_items: "{{ find_yamlfiles.files | map(attribute='path') | map('relpath', source_dir) | list }}"
+
+    - name: Execute playbooks
+      command: ansible-playbook ansible/docker.yaml --extra-vars "DOCKER_USERNAME={{ DOCKER_USERNAME }} DOCKER_PASSWORD={{ DOCKER_PASSWORD }} DOCKER_IMAGE={{ DOCKER_IMAGE }} DOCKER_CONTAINER={{ DOCKER_CONTAINER }}"

@@ -1,0 +1,177 @@
+name: Test, Build & Deploy
+
+on:
+  push:
+    branches: ["dev", "prod"]
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [16.x, 18.x]
+    
+    steps:
+      - name: Copy repository
+        uses: actions/checkout@v2
+      
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install npm dependencies
+        run: npm i
+        
+      - name: Install Nestjs/cli
+        run: npm install -g @nestjs/cli
+      
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+      
+      - name: Test
+        run: npm run test
+
+  build:
+    name: Build
+    needs: [test]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Extract branch name
+        shell: bash
+        run: echo "##[set-output name=branch;]${{ github.base_ref }}"
+        id: extract_branch
+
+      - name: Show branch name
+        run: echo "${{ steps.extract_branch.outputs.branch }}"
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and export to Docker
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          load: true
+          tags: ${{ steps.extract_branch.outputs.branch }}
+
+      #- name: Test
+      #  run: |
+      #    docker run --rm ${{ steps.extract_branch.outputs.branch }}
+
+      # Build and push Docker image with Buildx (don't push on PR)
+      # https://github.com/docker/build-push-action
+      - name: Build and push Docker image
+        id: build-and-push
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: dylanbarbona/devops-project-api:${{ steps.extract_branch.outputs.branch }}
+          
+  deploy:
+    name: "Deploy"
+    needs: [test, build]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Extract branch name
+        shell: bash
+        run: echo "##[set-output name=branch;]${{ github.base_ref }}"
+        id: extract_branch
+
+      # Checkout the repository to the GitHub Actions runner
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+          terraform_wrapper: false
+
+      # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+      - name: Terraform Init
+        working-directory: './terraform'
+        run: terraform init -backend-config="access_key=${{ secrets.AWS_ACCESS_KEY_ID }}" -backend-config="secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+
+      - name: Terraform create workspace
+        working-directory: './terraform'
+        run: terraform workspace create ${{ steps.extract_branch.outputs.branch }}
+
+      - name: Terraform select workspace
+        working-directory: './terraform'
+        run: terraform workspace select ${{ steps.extract_branch.outputs.branch }}
+
+      # Checks that all Terraform configuration files adhere to a canonical format
+      - name: Terraform Format
+        working-directory: './terraform'
+        run: terraform fmt -check
+
+      # Generates an execution plan for Terraform
+      - name: Terraform Plan
+        working-directory: './terraform'
+        run: terraform plan -input=false
+          -var 'AWS_INSTANCE_PUBLIC_KEY=${{ secrets.AWS_INSTANCE_PUBLIC_KEY }}'
+          -var 'AWS_INSTANCE_PRIVATE_KEY=${{ secrets.AWS_INSTANCE_PRIVATE_KEY }}'
+          -var 'AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}'
+          -var 'AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}'
+          -var 'db_password=${{ secrets.DB_PASSWORD }}'
+
+        # On push to "main", build or change infrastructure according to Terraform configuration files
+        # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
+      - name: Terraform Apply
+        working-directory: './terraform'
+        run: terraform apply -auto-approve -input=false
+          -var 'AWS_INSTANCE_PUBLIC_KEY=${{ secrets.AWS_INSTANCE_PUBLIC_KEY }}'
+          -var 'AWS_INSTANCE_PRIVATE_KEY=${{ secrets.AWS_INSTANCE_PRIVATE_KEY }}'
+          -var 'AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}'
+          -var 'AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}'
+          -var 'db_password=${{ secrets.DB_PASSWORD }}'
+
+      - name: Get bastion host
+        working-directory: './terraform'
+        run: echo "::set-output name=BASTION_HOST::$(terraform output -raw bastion_url)"
+        id: get-bastion-host
+
+      - name: Show bastion host
+        run: echo "${{ steps.get-bastion-host.outputs.BASTION_HOST }}"
+
+      - name: Run playbook
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: ansible.yaml
+          directory: ./ansible
+          key: ${{ secrets.AWS_INSTANCE_PRIVATE_KEY }}
+          inventory: |
+            [all]
+            ${{ steps.get-bastion-host.outputs.BASTION_HOST }}
+
+          options: |
+            --extra-vars "DOCKER_USERNAME=${{ secrets.DOCKERHUB_USERNAME }} \
+              DOCKER_PASSWORD=${{ secrets.DOCKERHUB_PASSWORD }} \
+              DOCKER_IMAGE=dylanbarbona/devops-project-api:${{ steps.extract_branch.outputs.branch }} \ 
+              DOCKER_CONTAINER=devops-project-api"
+            --verbose
