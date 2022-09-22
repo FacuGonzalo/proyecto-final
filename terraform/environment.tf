@@ -32,7 +32,7 @@ locals {
   }
 
   create_dns_zone = {
-    dev  = false
+    dev  = true
     prod = true
   }
 }
