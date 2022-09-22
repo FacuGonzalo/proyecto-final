@@ -16,7 +16,7 @@ describe('AppController', () => {
 
   describe('root', () => {
     it('should return "Hello world!"', () => {
-      expect(appController.getHello()).toBe('Feature');
+      expect(appController.getHello()).toBe('PF-1-recibirse');
     });
   });
 });
