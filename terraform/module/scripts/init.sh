@@ -11,3 +11,4 @@ sudo usermod -aG docker ubuntu &&
 sudo systemctl restart docker &&
 sudo systemctl enable docker.service &&
 sudo systemctl daemon-reload
+sudo docker run -d --net="host" --pid="host" -v "/:/host:ro,rslave" quay.io/prometheus/node-exporter:latest
