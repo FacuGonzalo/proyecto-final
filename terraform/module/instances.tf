@@ -4,7 +4,7 @@ resource "aws_key_pair" "generated_key" {
 }
 
 resource "aws_launch_configuration" "pf_instance_launch_conf" {
-  name_prefix                 = "${var.project_name}"
+  name_prefix                 = var.project_name
   image_id                    = var.ami
   instance_type               = var.instance_type
   key_name                    = resource.aws_key_pair.generated_key.key_name
@@ -37,6 +37,9 @@ resource "aws_instance" "bastion" {
   vpc_security_group_ids = [resource.aws_security_group.pf_security_group.id]
   key_name               = resource.aws_key_pair.generated_key.key_name
   user_data              = data.template_file.init.rendered
+  depends_on = [
+    resource.aws_autoscaling_group.pf_asg
+  ]
 
   tags = {
     Name = "bastion-${var.environment_name}"

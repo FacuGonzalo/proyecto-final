@@ -42,6 +42,8 @@ keyed_groups:
   - key: tags.Name" > /opt/ansible/inventory/aws_ec2.yaml
 
 sudo mkdir -p ~/prometheus/conf
+sudo touch ~/prometheus/conf/prometheus.yml
+sudo chmod 777 ~/prometheus/conf/prometheus.yml
 sudo echo "
 global:
   scrape_interval: 10s
@@ -69,4 +71,4 @@ scrape_configs:
 #        target_label: instance
 " > ~/prometheus/conf/prometheus.yml
 
-sudo docker run -p9090:9090 -d --volume "~/prometheus.yml:/opt/bitnami/prometheus/conf/prometheus.yml:ro" --volume "prometheus_data:/opt/bitnami/prometheus/data" --name prometheus bitnami/prometheus:latest
+sudo docker run -p9090:9090 -d --volume "$(pwd)/prometheus/conf/prometheus.yml:/opt/bitnami/prometheus/conf/prometheus.yml:ro" --volume "prometheus_data:/opt/bitnami/prometheus/data" --name prometheus bitnami/prometheus:latest
