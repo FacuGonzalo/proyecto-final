@@ -15,18 +15,16 @@ sudo usermod -aG docker ubuntu &&
 sudo systemctl restart docker &&
 sudo systemctl enable docker.service &&
 sudo systemctl daemon-reload
-sudo apt-get install python3-pip -y
-sudo pip install boto3
 
 #############################################################
 # Ansiible
 #############################################################
 
-sudo mkdir /etc/ansible
+sudo apt-get install python3-pip -y
+sudo pip install boto3
 
+sudo mkdir -p /etc/ansible
 sudo mkdir -p /opt/ansible/inventory
-sudo touch /opt/ansible/inventory/aws_ec2.yaml
-sudo chmod 777 /opt/ansible/inventory/aws_ec2.yaml
 
 sudo touch ${AWS_INSTANCE_PRIVATE_KEY_NAME}
 sudo echo "${AWS_INSTANCE_PRIVATE_KEY}" > ${AWS_INSTANCE_PRIVATE_KEY_NAME}
@@ -42,6 +40,8 @@ private_key_file = ${AWS_INSTANCE_PRIVATE_KEY_NAME}
 [inventory]
 enable_plugins = aws_ec2" > /etc/ansible/ansible.cfg
 
+sudo touch /opt/ansible/inventory/aws_ec2.yaml
+sudo chmod 777 /opt/ansible/inventory/aws_ec2.yaml
 sudo echo "---
 plugin: aws_ec2
 aws_access_key: ${AWS_ACCESS_KEY_ID}
@@ -50,54 +50,13 @@ keyed_groups:
   - key: tags.Name" > /opt/ansible/inventory/aws_ec2.yaml
 
 #############################################################
-# PROMETHEUS & GRAFANA (Instalación)
-#############################################################
-
-sudo touch ~/docker-compose.yml
-sudo chmod 777 ~/docker-compose.yml
-sudo echo "
-version: '3'
-
-services:
-  grafana:
-    image: grafana/grafana-enterprise:latest
-    container_name: grafana
-    ports:
-      - 3000:3000
-    networks:
-      - metrics_net
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning
-
-  prometheus:
-    image: bitnami/prometheus:latest
-    container_name: prometheus
-    restart: always
-    ports:
-      - 9090:9090
-    volumes:
-      - ~/prometheus/conf/prometheus.yml:/opt/bitnami/prometheus/conf/prometheus.yml:ro
-      - prometheus_data:/opt/bitnami/prometheus/data
-    networks:
-      - metrics_net
-
-volumes:
-  prometheus_data:
-  grafana_data:
-
-networks:
-  metrics_net:
-" > ~/docker-compose.yml
-
-
-#############################################################
 # PROMETHEUS & GRAFANA (Configuraciones)
 #############################################################
 
-sudo mkdir -p ~/prometheus/conf
-sudo touch ~/prometheus/conf/prometheus.yml
-sudo chmod 777 ~/prometheus/conf/prometheus.yml
+sudo cd /home/ubuntu
+sudo mkdir -p $(pwd)/prometheus/conf &&
+sudo touch $(pwd)/prometheus/conf/prometheus.yml &&
+sudo chmod 777 $(pwd)/prometheus/conf/prometheus.yml &&
 sudo echo "
 global:
   scrape_interval: 10s
@@ -123,12 +82,11 @@ scrape_configs:
 #        # Use the instance ID as the instance label
 #      - source_labels: [__meta_ec2_instance_id]
 #        target_label: instance
-" > ~/prometheus/conf/prometheus.yml
+" > $(pwd)/prometheus/conf/prometheus.yml
 
-sudo mkdir -p ~/grafana/provisioning/datasources
-sudo touch ~/grafana/provisioning/datasources/default.yml
-sudo chmod 777 ~/grafana/provisioning/datasources/default.yml
-
+sudo mkdir -p $(pwd)/grafana/provisioning/datasources &&
+sudo touch $(pwd)/grafana/provisioning/datasources/default.yml &&
+sudo chmod 777 $(pwd)/grafana/provisioning/datasources/default.yml &&
 sudo echo "
 apiVersion: 1
 
@@ -158,17 +116,15 @@ datasources:
     tlsClientKey: ""
   version: 1
   editable: true
-" > ~/grafana/provisioning/datasources/default.yml
+" > $(pwd)/grafana/provisioning/datasources/default.yml
 
 # Configuración Dashboard
-sudo touch ~/grafana/provisioning/dashboards/node-exporter-full.json
-sudo chmod 777 ~/grafana/provisioning/dashboards/node-exporter-full.json
-sudo curl https://raw.githubusercontent.com/rfmoz/grafana-dashboards/master/prometheus/node-exporter-full.json > ~/grafana/provisioning/dashboards/node-exporter-full.json
-
-sudo mkdir -p ~/grafana/provisioning/dashboards
-sudo touch ~/grafana/provisioning/dashboards/default.yml
-sudo chmod 777 ~/grafana/provisioning/dashboards/default.yml
-
+sudo mkdir -p $(pwd)/grafana/provisioning/dashboards &&
+sudo touch $(pwd)/grafana/provisioning/dashboards/node-exporter-full.json &&
+sudo chmod 777 $(pwd)/grafana/provisioning/dashboards/node-exporter-full.json &&
+sudo curl https://raw.githubusercontent.com/rfmoz/grafana-dashboards/master/prometheus/node-exporter-full.json > $(pwd)/grafana/provisioning/dashboards/node-exporter-full.json &&
+sudo touch $(pwd)/grafana/provisioning/dashboards/default.yml &&
+sudo chmod 777 $(pwd)/grafana/provisioning/dashboards/default.yml &&
 sudo echo "
 apiVersion: 1
 providers:
@@ -180,6 +136,47 @@ providers:
   editable: true
   options:
     path: /etc/grafana/provisioning/dashboards
-" > ~/grafana/provisioning/dashboards/default.yml
+" > $(pwd)/grafana/provisioning/dashboards/default.yml
 
+
+#############################################################
+# PROMETHEUS & GRAFANA (Instalación)
+#############################################################
+
+sudo touch docker-compose.yml &&
+sudo chmod 777 docker-compose.yml &&
+sudo echo "
+version: '3'
+
+services:
+  grafana:
+    image: grafana/grafana-enterprise:latest
+    container_name: grafana
+    ports:
+      - 3000:3000
+    networks:
+      - metrics_net
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+
+  prometheus:
+    image: bitnami/prometheus:latest
+    container_name: prometheus
+    restart: always
+    ports:
+      - 9090:9090
+    volumes:
+      - $(pwd)/prometheus/conf/prometheus.yml:/opt/bitnami/prometheus/conf/prometheus.yml:ro
+      - prometheus_data:/opt/bitnami/prometheus/data
+    networks:
+      - metrics_net
+
+volumes:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  metrics_net:
+" > docker-compose.yml
 sudo docker-compose up -d
