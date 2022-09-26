@@ -139,6 +139,8 @@ jobs:
           -var 'AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}'
           -var 'AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}'
           -var 'db_password=${{ secrets.DB_PASSWORD }}'
+          -var 'DOCKER_IMAGE=dylanbarbona/devops-project-api:${{ github.event.release.tag_name }}'
+          -var 'DOCKER_CONTAINER=devops-project-api'
 
         # On push to "main", build or change infrastructure according to Terraform configuration files
         # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
@@ -150,6 +152,8 @@ jobs:
           -var 'AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}'
           -var 'AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}'
           -var 'db_password=${{ secrets.DB_PASSWORD }}'
+          -var 'DOCKER_IMAGE=dylanbarbona/devops-project-api:${{ github.event.release.tag_name }}'
+          -var 'DOCKER_CONTAINER=devops-project-api'
 
       - name: Get bastion host
         working-directory: './terraform'

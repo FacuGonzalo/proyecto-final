@@ -105,3 +105,18 @@ variable "db_password" {
   type        = string
   sensitive   = true
 }
+
+
+########################################
+# Docker
+########################################
+
+variable "DOCKER_IMAGE" {
+  description = "Docker image version"
+  type        = string
+}
+
+variable "DOCKER_CONTAINER" {
+  description = "Docker container name"
+  type        = string
+}

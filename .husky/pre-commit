@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "[Husky] pre-commit"
+npx lint-staged
+npm run test
+cd terraform && terraform fmt
