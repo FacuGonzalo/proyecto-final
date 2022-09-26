@@ -127,7 +127,7 @@ scrape_configs:
 
 sudo mkdir -p ~/grafana/provisioning/datasources
 sudo touch ~/grafana/provisioning/datasources/default.yml
-sudo chmod 777 -R ~/grafana/provisioning/datasources/default.yml
+sudo chmod 777 ~/grafana/provisioning/datasources/default.yml
 
 sudo echo "
 apiVersion: 1
@@ -167,7 +167,7 @@ sudo curl https://raw.githubusercontent.com/rfmoz/grafana-dashboards/master/prom
 
 sudo mkdir -p ~/grafana/provisioning/dashboards
 sudo touch ~/grafana/provisioning/dashboards/default.yml
-sudo chmod 777 -R ~/grafana/provisioning/dashboards/default.yml
+sudo chmod 777 ~/grafana/provisioning/dashboards/default.yml
 
 sudo echo "
 apiVersion: 1
