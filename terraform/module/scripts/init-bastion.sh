@@ -130,11 +130,12 @@ datasources:
 " > ~/grafana/provisioning/datasources/default.yml
 
 # Configuración Dashboard
+sudo mkdir -p ~/grafana/provisioning/dashboards
+
 sudo touch ~/grafana/provisioning/dashboards/node-exporter-full.json
 sudo chmod 777 ~/grafana/provisioning/dashboards/node-exporter-full.json
 sudo curl https://raw.githubusercontent.com/rfmoz/grafana-dashboards/master/prometheus/node-exporter-full.json > ~/grafana/provisioning/dashboards/node-exporter-full.json
 
-sudo mkdir -p ~/grafana/provisioning/dashboards
 sudo touch ~/grafana/provisioning/dashboards/default.yml
 sudo chmod 777 ~/grafana/provisioning/dashboards/default.yml
 
