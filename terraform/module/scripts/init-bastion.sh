@@ -15,8 +15,6 @@ sudo usermod -aG docker ubuntu &&
 sudo systemctl restart docker &&
 sudo systemctl enable docker.service &&
 sudo systemctl daemon-reload
-sudo apt-get install python3-pip -y
-sudo pip install boto3
 
 #############################################################
 # PROMETHEUS & GRAFANA (Instalación)
@@ -184,3 +182,6 @@ aws_access_key: ${AWS_ACCESS_KEY_ID}
 aws_secret_key: ${AWS_SECRET_ACCESS_KEY}
 keyed_groups:
   - key: tags.Name" > /opt/ansible/inventory/aws_ec2.yaml
+
+sudo apt-get install python3-pip -y
+sudo pip install boto3
