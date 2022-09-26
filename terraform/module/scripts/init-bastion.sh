@@ -19,37 +19,6 @@ sudo apt-get install python3-pip -y
 sudo pip install boto3
 
 #############################################################
-# Ansiible
-#############################################################
-
-sudo mkdir /etc/ansible
-
-sudo mkdir -p /opt/ansible/inventory
-sudo touch /opt/ansible/inventory/aws_ec2.yaml
-sudo chmod 777 /opt/ansible/inventory/aws_ec2.yaml
-
-sudo touch ${AWS_INSTANCE_PRIVATE_KEY_NAME}
-sudo echo "${AWS_INSTANCE_PRIVATE_KEY}" > ${AWS_INSTANCE_PRIVATE_KEY_NAME}
-sudo chmod 400 ${AWS_INSTANCE_PRIVATE_KEY_NAME}
-
-sudo echo "[defaults]
-inventory      = /opt/ansible/inventory/aws_ec2.yaml
-host_key_checking = False
-pipelining = True
-remote_user = ubuntu
-private_key_file = ${AWS_INSTANCE_PRIVATE_KEY_NAME}
-
-[inventory]
-enable_plugins = aws_ec2" > /etc/ansible/ansible.cfg
-
-sudo echo "---
-plugin: aws_ec2
-aws_access_key: ${AWS_ACCESS_KEY_ID}
-aws_secret_key: ${AWS_SECRET_ACCESS_KEY}
-keyed_groups:
-  - key: tags.Name" > /opt/ansible/inventory/aws_ec2.yaml
-
-#############################################################
 # PROMETHEUS & GRAFANA (Instalación)
 #############################################################
 
@@ -161,11 +130,12 @@ datasources:
 " > ~/grafana/provisioning/datasources/default.yml
 
 # Configuración Dashboard
+sudo mkdir -p ~/grafana/provisioning/dashboards
+
 sudo touch ~/grafana/provisioning/dashboards/node-exporter-full.json
 sudo chmod 777 ~/grafana/provisioning/dashboards/node-exporter-full.json
 sudo curl https://raw.githubusercontent.com/rfmoz/grafana-dashboards/master/prometheus/node-exporter-full.json > ~/grafana/provisioning/dashboards/node-exporter-full.json
 
-sudo mkdir -p ~/grafana/provisioning/dashboards
 sudo touch ~/grafana/provisioning/dashboards/default.yml
 sudo chmod 777 ~/grafana/provisioning/dashboards/default.yml
 
@@ -183,3 +153,34 @@ providers:
 " > ~/grafana/provisioning/dashboards/default.yml
 
 sudo docker-compose up -d
+
+
+#############################################################
+# Ansiible
+#############################################################
+
+sudo mkdir /etc/ansible
+sudo mkdir -p /opt/ansible/inventory
+
+sudo touch ${AWS_INSTANCE_PRIVATE_KEY_NAME}
+sudo echo "${AWS_INSTANCE_PRIVATE_KEY}" > ${AWS_INSTANCE_PRIVATE_KEY_NAME}
+sudo chmod 400 ${AWS_INSTANCE_PRIVATE_KEY_NAME}
+
+sudo echo "[defaults]
+inventory      = /opt/ansible/inventory/aws_ec2.yaml
+host_key_checking = False
+pipelining = True
+remote_user = ubuntu
+private_key_file = ${AWS_INSTANCE_PRIVATE_KEY_NAME}
+
+[inventory]
+enable_plugins = aws_ec2" > /etc/ansible/ansible.cfg
+
+sudo touch /opt/ansible/inventory/aws_ec2.yaml
+sudo chmod 777 /opt/ansible/inventory/aws_ec2.yaml
+sudo echo "---
+plugin: aws_ec2
+aws_access_key: ${AWS_ACCESS_KEY_ID}
+aws_secret_key: ${AWS_SECRET_ACCESS_KEY}
+keyed_groups:
+  - key: tags.Name" > /opt/ansible/inventory/aws_ec2.yaml
