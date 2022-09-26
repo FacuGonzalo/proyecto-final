@@ -4,4 +4,4 @@
 echo "[Husky] pre-commit"
 npx lint-staged
 npm run test
-
+cd terraform && terraform fmt
