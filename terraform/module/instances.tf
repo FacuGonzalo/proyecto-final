@@ -3,6 +3,15 @@ resource "aws_key_pair" "generated_key" {
   public_key = var.AWS_INSTANCE_PUBLIC_KEY
 }
 
+data "template_file" "init" {
+  template = file("${path.module}/scripts/init.sh")
+
+  vars = {
+    DOCKER_IMAGE                  = var.DOCKER_IMAGE
+    DOCKER_CONTAINER              = var.DOCKER_CONTAINER
+  }
+}
+
 resource "aws_launch_configuration" "pf_instance_launch_conf" {
   name_prefix                 = var.project_name
   image_id                    = var.ami
@@ -11,14 +20,14 @@ resource "aws_launch_configuration" "pf_instance_launch_conf" {
   security_groups             = [resource.aws_security_group.pf_security_group.id]
   associate_public_ip_address = true
 
-  user_data = file("${path.module}/scripts/init.sh")
+  user_data = data.template_file.init.rendered
 
   lifecycle {
     create_before_destroy = true
   }
 }
 
-data "template_file" "init" {
+data "template_file" "bastion_init" {
   template = file("${path.module}/scripts/init-bastion.sh")
 
   vars = {
@@ -36,7 +45,7 @@ resource "aws_instance" "bastion" {
   subnet_id              = resource.aws_subnet.pf_public_subnet_1.id
   vpc_security_group_ids = [resource.aws_security_group.pf_security_group.id]
   key_name               = resource.aws_key_pair.generated_key.key_name
-  user_data              = data.template_file.init.rendered
+  user_data              = data.template_file.bastion_init.rendered
   depends_on = [
     resource.aws_autoscaling_group.pf_asg
   ]
