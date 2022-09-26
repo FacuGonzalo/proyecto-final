@@ -186,3 +186,17 @@ variable "prv_sub2_cidr_block" {
   type        = string
   default     = "10.0.4.0/24"
 }
+
+########################################
+# Docker
+########################################
+
+variable "DOCKER_IMAGE" {
+  description = "Docker image version"
+  type        = string
+}
+
+variable "DOCKER_CONTAINER" {
+  description = "Docker container name"
+  type        = string
+}

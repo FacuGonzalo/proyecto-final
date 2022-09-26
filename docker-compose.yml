@@ -29,14 +29,3 @@ services:
 
 volumes:
   docker-postgres:
-
-
-
-
-
-
-
-
-
-
-

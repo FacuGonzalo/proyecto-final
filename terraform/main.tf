@@ -41,6 +41,10 @@ module "environment" {
   AWS_INSTANCE_PUBLIC_KEY  = var.AWS_INSTANCE_PUBLIC_KEY
   AWS_INSTANCE_PRIVATE_KEY = var.AWS_INSTANCE_PRIVATE_KEY
 
+  # Docker image
+  DOCKER_IMAGE = var.DOCKER_IMAGE
+  DOCKER_CONTAINER = var.DOCKER_CONTAINER
+
   # AWS Region and domains
   create_dns_zone           = local.create_dns_zone[local.environment_name]
   region                    = var.region
