@@ -23,7 +23,7 @@ locals {
 
   pf_asg_desired_capacity = {
     dev  = 1,
-    prod = 2
+    prod = 1
   }
 
   db_instance_type = {
