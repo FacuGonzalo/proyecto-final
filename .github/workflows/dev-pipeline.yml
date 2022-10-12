@@ -168,6 +168,11 @@ jobs:
         run: echo "::set-output name=EC2_NAMES::_$(terraform output -raw instance_name)"
         id: get-ec2-names
 
+      - name: Sleep for 2 minutes
+        uses: jakejarvis/wait-action@master
+        with:
+          time: '2m'
+
       - name: Run playbook
         uses: dawidd6/action-ansible-playbook@v2
         with:
