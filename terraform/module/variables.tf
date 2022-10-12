@@ -44,7 +44,7 @@ variable "AWS_SECRET_ACCESS_KEY" {
 variable "region" {
   description = "Default region for provider"
   type        = string
-  default     = "us-west-2"
+  default     = "us-east-1"
 }
 
 # Route 53 Variables
@@ -66,7 +66,7 @@ variable "create_dns_zone" {
 variable "ami" {
   description = "Amazon machine image to use for ec2 instance"
   type        = string
-  default     = "ami-0d70546e43a941d70" # Ubuntu 22.04 LTS // us-west-2
+  default     = "ami-08c40ec9ead489470" # Ubuntu 22.04 LTS // us-east-1
 }
 
 variable "instance_type" {
@@ -89,7 +89,7 @@ variable "AWS_INSTANCE_PRIVATE_KEY" {
 
 variable "bastion_availability_zone" {
   type        = string
-  description = "us-west-2a"
+  description = "us-east-1a"
 }
 
 ########################################
