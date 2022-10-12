@@ -4,4 +4,8 @@
 echo "[Husky] pre-commit"
 npx lint-staged
 npm run test
-cd terraform && terraform fmt
+if ! [ -x "$(command -v terraform)" ]; then
+  echo 'Warning: terraform is not installed.' >&2
+else
+  cd terraform && terraform fmt
+fi
