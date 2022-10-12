@@ -123,6 +123,11 @@ jobs:
         run: echo "::set-output name=BASTION_HOST::$(terraform output -raw bastion_url)"
         id: get-bastion-host
 
+      - name: Get ec2 names
+        working-directory: './terraform'
+        run: echo "::set-output name=EC2_NAMES::_$(terraform output -raw instance_name)"
+        id: get-ec2-names
+
       - name: Show bastion host
         run: echo "${{ steps.get-bastion-host.outputs.BASTION_HOST }}"
 
@@ -141,4 +146,5 @@ jobs:
               DOCKER_PASSWORD=${{ secrets.DOCKERHUB_PASSWORD }} \
               DOCKER_IMAGE=dylanbarbona/devops-project-api:${{ github.event.release.tag_name }} \ 
               DOCKER_CONTAINER=devops-project-api"
+              EC2_NAMES=${{ steps.get-ec2-names.outputs.EC2_NAMES }}
             --verbose

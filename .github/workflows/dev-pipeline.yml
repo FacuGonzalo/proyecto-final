@@ -163,6 +163,11 @@ jobs:
       - name: Show bastion host
         run: echo "${{ steps.get-bastion-host.outputs.BASTION_HOST }}"
 
+      - name: Get ec2 names
+        working-directory: './terraform'
+        run: echo "::set-output name=EC2_NAMES::_$(terraform output -raw instance_name)"
+        id: get-ec2-names
+
       - name: Run playbook
         uses: dawidd6/action-ansible-playbook@v2
         with:
@@ -177,5 +182,6 @@ jobs:
             --extra-vars "DOCKER_USERNAME=${{ secrets.DOCKERHUB_USERNAME }} \
               DOCKER_PASSWORD=${{ secrets.DOCKERHUB_PASSWORD }} \
               DOCKER_IMAGE=dylanbarbona/devops-project-api:${{ steps.extract_branch.outputs.branch }} \ 
-              DOCKER_CONTAINER=devops-project-api"
+              DOCKER_CONTAINER=devops-project-api" \
+              EC2_NAMES=${{ steps.get-ec2-names.outputs.EC2_NAMES }}
             --verbose
