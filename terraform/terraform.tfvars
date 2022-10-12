@@ -1,11 +1,11 @@
-bucket_name   = "terraform-state-devops-project"
+bucket_name   = "terraform-state-devops-final-project"
 dynamodb_name = "terraform-state-locking"
 
-region                    = "us-west-2"
-bastion_availability_zone = "us-west-2a"
+region                    = "us-east-1"
+bastion_availability_zone = "us-east-1a"
 domain                    = "devops-proyecto-final.com"
 
-ami      = "ami-0d70546e43a941d70" # Ubuntu 22.04 LTS // us-west-2
+ami      = "ami-08c40ec9ead489470" # Ubuntu 22.04 LTS // us-east-1
 key_name = "proyecto-key"
 
 db_name           = "pf_database"
