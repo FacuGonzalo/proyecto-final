@@ -80,10 +80,6 @@ jobs:
         working-directory: './terraform'
         run: terraform init -backend-config="access_key=${{ secrets.AWS_ACCESS_KEY_ID }}" -backend-config="secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}"
 
-      - name: Terraform create workspace
-        working-directory: './terraform'
-        run: terraform workspace create prod
-
       - name: Terraform select workspace
         working-directory: './terraform'
         run: terraform workspace select prod
@@ -123,8 +119,18 @@ jobs:
         run: echo "::set-output name=BASTION_HOST::$(terraform output -raw bastion_url)"
         id: get-bastion-host
 
+      - name: Get ec2 names
+        working-directory: './terraform'
+        run: echo "::set-output name=EC2_NAMES::_$(terraform output -raw instance_name)"
+        id: get-ec2-names
+
       - name: Show bastion host
         run: echo "${{ steps.get-bastion-host.outputs.BASTION_HOST }}"
+      
+      - name: Sleep for 1 minute
+        uses: jakejarvis/wait-action@master
+        with:
+          time: '1m'
 
       - name: Run playbook
         uses: dawidd6/action-ansible-playbook@v2
@@ -140,5 +146,13 @@ jobs:
             --extra-vars "DOCKER_USERNAME=${{ secrets.DOCKERHUB_USERNAME }} \
               DOCKER_PASSWORD=${{ secrets.DOCKERHUB_PASSWORD }} \
               DOCKER_IMAGE=dylanbarbona/devops-project-api:${{ github.event.release.tag_name }} \ 
-              DOCKER_CONTAINER=devops-project-api"
+              DOCKER_CONTAINER=devops-project-api \
+              EC2_NAMES=${{ steps.get-ec2-names.outputs.EC2_NAMES }}"
             --verbose
+
+      - name: Load Balancer
+        working-directory: './terraform'
+        run: echo $(terraform output -raw dns_url)
+
+      - name: Bastion
+        run: echo "${{ steps.get-bastion-host.outputs.BASTION_HOST }}"

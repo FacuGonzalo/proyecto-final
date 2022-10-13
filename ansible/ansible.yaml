@@ -46,4 +46,4 @@
       with_items: "{{ find_yamlfiles.files | map(attribute='path') | map('relpath', source_dir) | list }}"
 
     - name: Execute playbooks
-      command: ansible-playbook ansible/docker.yaml --extra-vars "DOCKER_USERNAME={{ DOCKER_USERNAME }} DOCKER_PASSWORD={{ DOCKER_PASSWORD }} DOCKER_IMAGE={{ DOCKER_IMAGE }} DOCKER_CONTAINER={{ DOCKER_CONTAINER }}"
+      command: ansible-playbook ansible/docker.yaml --extra-vars "EC2_NAMES={{ EC2_NAMES }} DOCKER_USERNAME={{ DOCKER_USERNAME }} DOCKER_PASSWORD={{ DOCKER_PASSWORD }} DOCKER_IMAGE={{ DOCKER_IMAGE }} DOCKER_CONTAINER={{ DOCKER_CONTAINER }}"
