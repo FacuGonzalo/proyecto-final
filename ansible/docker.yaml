@@ -1,5 +1,5 @@
 ---
-- hosts: all
+- hosts: {{ EC2_NAMES }}
   become: true
   remote_user: ubuntu
   become_method: sudo
