@@ -117,10 +117,6 @@ jobs:
         working-directory: './terraform'
         run: terraform init -backend-config="access_key=${{ secrets.AWS_ACCESS_KEY_ID }}" -backend-config="secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}"
 
-      - name: Terraform create workspace
-        working-directory: './terraform'
-        run: terraform workspace create ${{ steps.extract_branch.outputs.branch }}
-
       - name: Terraform select workspace
         working-directory: './terraform'
         run: terraform workspace select ${{ steps.extract_branch.outputs.branch }}
@@ -168,7 +164,7 @@ jobs:
       - name: Sleep for 2 minutes
         uses: jakejarvis/wait-action@master
         with:
-          time: '2m'
+          time: '1m'
 
       - name: Run playbook
         uses: dawidd6/action-ansible-playbook@v2
