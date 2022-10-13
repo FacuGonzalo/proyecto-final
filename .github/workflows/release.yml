@@ -150,6 +150,13 @@ jobs:
             --extra-vars "DOCKER_USERNAME=${{ secrets.DOCKERHUB_USERNAME }} \
               DOCKER_PASSWORD=${{ secrets.DOCKERHUB_PASSWORD }} \
               DOCKER_IMAGE=dylanbarbona/devops-project-api:${{ github.event.release.tag_name }} \ 
-              DOCKER_CONTAINER=devops-project-api"
-              EC2_NAMES=${{ steps.get-ec2-names.outputs.EC2_NAMES }}
+              DOCKER_CONTAINER=devops-project-api \
+              EC2_NAMES=${{ steps.get-ec2-names.outputs.EC2_NAMES }}"
             --verbose
+
+      - name: Load Balancer
+        working-directory: './terraform'
+        run: echo $(terraform output -raw dns_url)
+
+      - name: Bastion
+        run: echo "${{ steps.get-bastion-host.outputs.BASTION_HOST }}"
