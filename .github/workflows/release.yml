@@ -127,10 +127,10 @@ jobs:
       - name: Show bastion host
         run: echo "${{ steps.get-bastion-host.outputs.BASTION_HOST }}"
       
-      - name: Sleep for 1 minute
+      - name: Sleep for 2 minutes
         uses: jakejarvis/wait-action@master
         with:
-          time: '1m'
+          time: '2m'
 
       - name: Run playbook
         uses: dawidd6/action-ansible-playbook@v2
